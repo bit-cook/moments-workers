@@ -1,5 +1,7 @@
 // api.js - 前端API请求封装
 
+import { clearAuthCache, getAuthInfo } from './authUtils';
+
 class ApiClient {
   constructor(baseURL = '/api') {
     this.baseURL = baseURL;
@@ -7,28 +9,50 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
     this.currentUser = null;
+    this.token = null;
+    this.redirectingToLogin = false;
   }
 
   /**
-   * 设置认证信息
-   * @param {string} account - 用户账号
-   * @param {string} password - 用户密码
+   * 设置 JWT token，后续请求会自动携带 Bearer 认证头。
+   * @param {string|null} token - JWT token
    */
-  setAuth(account, password) {
-    const credentials = btoa(`${account}:${password}`);
-    this.defaultHeaders.Authorization = `Basic ${credentials}`;
+  setToken(token) {
+    this.token = token;
+    this.redirectingToLogin = false;
+    if (token) {
+      this.defaultHeaders.Authorization = `Bearer ${token}`;
+    } else {
+      delete this.defaultHeaders.Authorization;
+    }
   }
 
   /**
-   * 清除认证信息
+   * 清除认证信息。
    */
   clearAuth() {
     delete this.defaultHeaders.Authorization;
     this.currentUser = null;
+    this.token = null;
   }
 
   /**
-   * 通用请求方法
+   * 处理 401 未授权，清理本地登录态并跳转到登录页。
+   */
+  handleUnauthorized() {
+    if (this.redirectingToLogin) return;
+
+    this.redirectingToLogin = true;
+    this.clearAuth();
+    clearAuthCache();
+
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.assign('/login');
+    }
+  }
+
+  /**
+   * 通用请求方法。
    * @param {string} endpoint - API端点
    * @param {Object} options - 请求选项
    * @returns {Promise<any>} 响应数据
@@ -36,17 +60,50 @@ class ApiClient {
    */
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    const headers = { ...this.defaultHeaders, ...options.headers };
+
+    if (options.isFormData) {
+      delete headers['Content-Type'];
+      delete headers['content-type'];
+    }
+
     const config = {
-      headers: { ...this.defaultHeaders, ...options.headers },
+      headers,
       ...options,
     };
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const isJsonResponse = contentType.includes('application/json');
+      let data = null;
 
-      if (!data.success) {
-        throw new Error(data.error?.message || 'Request failed');
+      if (isJsonResponse) {
+        try {
+          data = await response.json();
+        } catch (error) {
+          data = null;
+        }
+      }
+
+      if (response.status === 401) {
+        this.handleUnauthorized();
+        const message = data?.error?.message || data?.error || data?.message || '未授权，请重新登录';
+        throw new Error(message);
+      }
+
+      if (!response.ok) {
+        const message = data?.error?.message || data?.error || data?.message || 'Request failed';
+        throw new Error(message);
+      }
+
+      if (!data || typeof data !== 'object') {
+        return null;
+      }
+
+      if (data.success === false) {
+        const message = data?.error?.message || data?.error || data?.message || 'Request failed';
+        throw new Error(message);
       }
 
       return data.data;
@@ -57,7 +114,7 @@ class ApiClient {
   }
 
   /**
-   * GET请求
+   * GET请求。
    * @param {string} endpoint - API端点
    * @param {Object} params - 查询参数
    * @returns {Promise<any>} 响应数据
@@ -69,7 +126,7 @@ class ApiClient {
   }
 
   /**
-   * POST请求
+   * POST请求。
    * @param {string} endpoint - API端点
    * @param {Object} data - 请求体数据
    * @returns {Promise<any>} 响应数据
@@ -82,7 +139,7 @@ class ApiClient {
   }
 
   /**
-   * PUT请求
+   * PUT请求。
    * @param {string} endpoint - API端点
    * @param {Object} data - 请求体数据
    * @returns {Promise<any>} 响应数据
@@ -95,12 +152,35 @@ class ApiClient {
   }
 
   /**
-   * DELETE请求
+   * DELETE请求。
    * @param {string} endpoint - API端点
    * @returns {Promise<any>} 响应数据
    */
   async delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' });
+  }
+
+  /**
+   * 上传文件。
+   * @param {File} file - 要上传的文件
+   * @returns {Promise<Object>} 上传结果
+   */
+  async uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const result = await this.request('/upload-file', {
+      method: 'POST',
+      body: formData,
+      isFormData: true,
+    });
+
+    return {
+      url: result?.url,
+      thumbnailUrl: result?.thumbnailUrl,
+      key: result?.key,
+      type: result?.mimeType ? (result.mimeType.startsWith('video/') ? 'video' : 'image') : 'image',
+    };
   }
 }
 
@@ -110,66 +190,56 @@ const api = new ApiClient();
 // 认证API封装
 export const authApi = {
   /**
-   * 登录验证 - 通过account查询用户，然后匹配密码
+   * 使用账号密码登录，服务端返回 JWT token。
    * @param {string} account - 用户账号
    * @param {string} password - 用户密码
-   * @returns {Promise<Object>} 登录结果 { success: boolean, user: Object }
+   * @returns {Promise<Object>} 登录结果 { success, user, token }
    * @throws {Error} 登录失败时抛出错误
    */
   async login(account, password) {
     try {
-      // 设置临时认证信息用于验证
-      api.setAuth(account, password);
+      const result = await api.post('/auth/login', { account, password });
+      const { token, ...userData } = result || {};
 
-      // 尝试获取用户列表来验证认证是否成功
-      // 如果认证失败会抛出错误
-      const users = await api.get('/auth');
-      console.log('users：', users);
-
-      let extraData = {};
-      try {
-        extraData = JSON.parse(users?.extra_data);
-      } catch (e) {
-        extraData = {};
+      if (!token) {
+        throw new Error('登录接口未返回 token');
       }
 
-      // 认证成功，保存当前用户信息
+      api.setToken(token);
       api.currentUser = {
-        ...users,
-        ...extraData,
+        ...userData,
         authenticated: true,
-        loginTime: new Date().toISOString()
       };
-      return { success: true, user: api.currentUser };
 
+      return { success: true, user: api.currentUser, token };
     } catch (error) {
-      // 认证失败，清除认证信息
       api.clearAuth();
-      console.log('error：', error, error?.message);
+      console.error('登录失败:', error);
 
-      // 根据错误类型返回不同的错误信息
-      if (error.message.includes('Authentication failed') ||
-        error.message.includes('Unauthorized') ||
-        error.message.includes('Invalid password')) {
+      if (error.message.includes('未授权') || error.message.includes('密码') || error.message.includes('用户不存在')) {
         throw new Error('账号或密码错误');
-      } else {
-        throw new Error('登录失败: ' + error.message);
       }
+
+      throw new Error('登录失败: ' + error.message);
     }
   },
 
-  async saveAuth(account, password, user) {
-    api.setAuth(account, password);
+  /**
+   * 从已有会话恢复认证状态。
+   * @param {Object} user - 用户信息
+   * @param {string} token - JWT token
+   */
+  async saveAuth(user, token) {
+    api.setToken(token);
     api.currentUser = {
       ...user,
       authenticated: true,
-      loginTime: new Date().toISOString()
     };
   },
 
   /**
-   * 登出
-   * @returns {Object} 登出结果 { success: boolean, message: string }
+   * 登出。
+   * @returns {Object} 登出结果 { success, message }
    */
   logout() {
     api.clearAuth();
@@ -177,15 +247,15 @@ export const authApi = {
   },
 
   /**
-   * 检查是否已认证
+   * 检查是否已认证。
    * @returns {boolean} 是否已认证
    */
   isAuthenticated() {
-    return !!api.defaultHeaders.Authorization && api.currentUser?.authenticated;
+    return !!api.token && api.currentUser?.authenticated;
   },
 
   /**
-   * 获取当前用户信息
+   * 获取当前用户信息。
    * @returns {Object|null} 当前用户信息
    */
   getCurrentUser() {
@@ -494,6 +564,9 @@ export const recordsApi = {
     }
   },
 };
+
+// 上传文件封装
+export const commonUploadFile = (file) => api.uploadFile(file);
 
 // 导出API实例和认证API
 export default api;

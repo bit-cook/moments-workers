@@ -8,8 +8,7 @@ import {
   LeftOutline,
 } from 'antd-mobile-icons';
 import { useAuth } from "../utils/authContext";
-import { recordsApi } from "../utils/api";
-import { commonUploadFile } from "../utils";
+import { recordsApi, commonUploadFile } from "../utils/api";
 import styles from './create.module.css';
 
 const Create = () => {

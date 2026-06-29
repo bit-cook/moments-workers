@@ -4,7 +4,6 @@ import {
   saveAuthInfo,
   getAuthInfo,
   clearAuthCache,
-  isAuthExpired,
   getCurrentUser
 } from './authUtils';
 
@@ -29,16 +28,15 @@ export const AuthProvider = ({ children }) => {
       try {
         const authInfo = getAuthInfo();
         console.log('authInfo🧐', authInfo);
-        if (authInfo) {
-          if (isAuthExpired()) {
-            await login(authInfo.credentials.account, authInfo.credentials.password);
-          } else {
-            await authApi.saveAuth(authInfo.credentials.account, authInfo.credentials.password, authInfo.user);
-            setUser(authInfo.user);
-          }
+
+        if (!authInfo || !authInfo.token) {
+          return;
         }
+
+        await authApi.saveAuth(authInfo.user, authInfo.token);
+        setUser(authInfo.user);
       } catch (e) {
-        setLoading(false);
+        console.error('初始化认证失败:', e);
       } finally {
         setLoading(false);
       }
@@ -54,8 +52,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await authApi.login(account, password);
 
-      // 保存认证信息到本地存储
-      saveAuthInfo(result.user, account, password);
+      // 保存认证信息到本地存储，包含 JWT token，便于刷新后恢复登录态
+      saveAuthInfo(result.user, result.token);
 
       // 更新状态
       setUser(result.user);

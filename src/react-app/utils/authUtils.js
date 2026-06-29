@@ -3,40 +3,43 @@
 // 本地存储键名
 const AUTH_KEYS = {
   USER: 'auth_user',
-  CREDENTIALS: 'auth_credentials', 
-  LOGIN_TIME: 'auth_login_time'
+  TOKEN: 'auth_token'
 };
 
 /**
- * 保存认证信息到本地存储
+ * 保存认证信息到本地存储。
+ * 仅保留 JWT token 作为登录态凭据。
  */
-export const saveAuthInfo = (userInfo, account, password) => {
+export const saveAuthInfo = (userInfo, token = null) => {
   try {
-    localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(userInfo));
-    localStorage.setItem(AUTH_KEYS.CREDENTIALS, JSON.stringify({ account, password }));
-    localStorage.setItem(AUTH_KEYS.LOGIN_TIME, JSON.stringify(new Date().toISOString()));
+    localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(userInfo || {}));
+
+    if (token) {
+      localStorage.setItem(AUTH_KEYS.TOKEN, token);
+    } else {
+      localStorage.removeItem(AUTH_KEYS.TOKEN);
+    }
   } catch (error) {
     console.error('保存认证信息失败:', error);
   }
 };
 
 /**
- * 从本地存储获取认证信息
+ * 从本地存储获取认证信息。
+ * 仅返回用户信息和 JWT token。
  */
 export const getAuthInfo = () => {
   try {
     const user = localStorage.getItem(AUTH_KEYS.USER);
-    const credentials = localStorage.getItem(AUTH_KEYS.CREDENTIALS);
-    const loginTime = localStorage.getItem(AUTH_KEYS.LOGIN_TIME);
-    
-    if (!user || !credentials || !loginTime) {
+    const token = localStorage.getItem(AUTH_KEYS.TOKEN);
+
+    if (!user || !token) {
       return null;
     }
 
     return {
       user: JSON.parse(user),
-      credentials: JSON.parse(credentials),
-      loginTime: JSON.parse(loginTime)
+      token
     };
   } catch (error) {
     console.error('获取认证信息失败:', error);
@@ -45,30 +48,15 @@ export const getAuthInfo = () => {
 };
 
 /**
- * 清除所有认证缓存
+ * 清除所有认证缓存。
  */
 export const clearAuthCache = () => {
   localStorage.removeItem(AUTH_KEYS.USER);
-  localStorage.removeItem(AUTH_KEYS.CREDENTIALS);
-  localStorage.removeItem(AUTH_KEYS.LOGIN_TIME);
+  localStorage.removeItem(AUTH_KEYS.TOKEN);
 };
 
 /**
- * 检查认证是否过期（默认24小时）
- */
-export const isAuthExpired = (expireHours = 24) => {
-  const authInfo = getAuthInfo();
-  if (!authInfo) return true;
-  
-  const loginDate = new Date(authInfo.loginTime);
-  const now = new Date();
-  const diffHours = (now - loginDate) / (1000 * 60 * 60);
-  
-  return diffHours > expireHours;
-};
-
-/**
- * 获取当前用户信息
+ * 获取当前用户信息。
  */
 export const getCurrentUser = () => {
   const authInfo = getAuthInfo();
@@ -76,9 +64,9 @@ export const getCurrentUser = () => {
 };
 
 /**
- * 获取认证凭据
+ * 获取当前 token。
  */
-export const getCredentials = () => {
+export const getToken = () => {
   const authInfo = getAuthInfo();
-  return authInfo ? authInfo.credentials : null;
+  return authInfo ? authInfo.token : null;
 }; 

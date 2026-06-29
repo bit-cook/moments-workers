@@ -12,8 +12,7 @@ import {
 import { EyeInvisibleOutline, EyeOutline, UserOutline, LockOutline, LeftOutline } from "antd-mobile-icons";
 import { useAuth } from "../utils/authContext";
 import { useNavigate } from "react-router-dom";
-import { usersApi } from "../utils/api";
-import { commonUploadFile } from "../utils";
+import { usersApi, commonUploadFile } from "../utils/api";
 import styles from "./createAccount.module.css";
 
 const CreateAccount = () => {
