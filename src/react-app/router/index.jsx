@@ -7,6 +7,7 @@ const Entry = lazy(() => import("../views/entry"));
 const Login = lazy(() => import("../views/login"));
 const Create = lazy(() => import("../views/create"));
 const CreateAccount = lazy(() => import("../views/createAccount"));
+const Users = lazy(() => import("../views/users"));
 
 // 加载组件
 const LoadingComponent = () => (
@@ -71,6 +72,19 @@ const router = createBrowserRouter([
     ),
     meta: {
       title: '创建账号',
+    },
+  },
+  {
+    path: "/users",
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingComponent />}>
+          <Users />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+    meta: {
+      title: '用户管理',
     },
   },
 ]);

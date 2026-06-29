@@ -1,6 +1,8 @@
 .loginContainer {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:
+    radial-gradient(circle at top left, rgba(15, 23, 42, 0.05), transparent 28%),
+    linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,7 +17,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.04) 0%, transparent 70%);
   animation: float 6s ease-in-out infinite;
 }
 
@@ -25,7 +27,7 @@
   right: -30%;
   width: 160%;
   height: 160%;
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.03) 0%, transparent 70%);
   animation: float 8s ease-in-out infinite reverse;
 }
 
@@ -39,10 +41,10 @@
 
 .card {
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(15, 23, 42, 0.06);
   overflow: hidden;
 }
 
@@ -58,13 +60,13 @@
 .logoIcon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #111827 0%, #334155 100%);
   border-radius: 16px;
   margin: 0 auto 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
 }
 
 .logoIcon svg {
@@ -108,7 +110,7 @@
 }
 
 .eyeIcon.visible {
-  color: #667eea;
+  color: #334155;
 }
 
 .loginButton {
@@ -117,15 +119,15 @@
   font-size: 16px;
   font-weight: 600;
   margin-top: 32px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #111827 0%, #334155 100%);
   border: none;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
   transition: all 0.3s ease;
 }
 
 .loginButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
 }
 
 .bottomLinks {
@@ -141,14 +143,14 @@
 }
 
 .registerLink a {
-  color: #667eea;
+  color: #334155;
   cursor: pointer;
   font-weight: 500;
   text-decoration: underline;
 }
 
 .registerLink a:hover {
-  color: #5a6fd8;
+  color: #111827;
 }
 
 @keyframes float {

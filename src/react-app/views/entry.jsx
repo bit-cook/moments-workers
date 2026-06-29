@@ -597,6 +597,16 @@ const Entry = () => {
                       创建账号
                     </div>
                   )}
+                  {user?.role === 'admin' && (
+                    <div
+                      className={styles.menuItem}
+                      onClick={() => {
+                        navigate('/users');
+                      }}
+                    >
+                      用户管理
+                    </div>
+                  )}
                   <div
                     className={`${styles.menuItem} ${styles.logoutItem}`}
                     onClick={() => {
@@ -663,6 +673,7 @@ const Entry = () => {
                         <a href="/create" style={{ marginLeft: 2 }}>发布</a>
                       </div>
                     }
+                    style={{ padding: 60 }}
                   />
                 )
               }
