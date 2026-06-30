@@ -38,7 +38,7 @@ const Entry = () => {
   const [pagination, setPagination] = useState({});
   const [deletingPostId, setDeletingPostId] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [showComments, setShowComments] = useState(true);
+  const [showComments, setShowComments] = useState(false);
   const handler = useRef(null);
   const containerRef = useRef(null);
 
