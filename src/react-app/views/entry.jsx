@@ -74,13 +74,26 @@ const Entry = () => {
       created.setHours(created.getHours() + 8);
 
       const diffMs = now - created;
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays >= 7) {
+        const pad = (value) => String(value).padStart(2, '0');
+        const year = created.getFullYear();
+        const month = pad(created.getMonth() + 1);
+        const day = pad(created.getDate());
+        const hours = pad(created.getHours());
+        const minutes = pad(created.getMinutes());
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      }
 
       if (diffDays > 0) {
         return `${diffDays}天前`;
       } else if (diffHours > 0) {
         return `${diffHours}小时前`;
+      } else if (diffMinutes > 0) {
+        return `${diffMinutes}分钟前`;
       } else {
         return '刚刚';
       }

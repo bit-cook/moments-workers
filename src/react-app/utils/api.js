@@ -205,9 +205,17 @@ export const authApi = {
         throw new Error('登录接口未返回 token');
       }
 
+      let extraData = {};
+      try {
+        extraData = JSON.parse(result?.extra_data);
+      } catch (e) {
+        extraData = {};
+      }
+
       api.setToken(token);
       api.currentUser = {
         ...userData,
+        ...extraData,
         authenticated: true,
       };
 
