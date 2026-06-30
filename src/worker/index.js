@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { cache } from 'hono/cache';
 import { verify, sign } from 'hono/jwt';
+import bcrypt from 'bcryptjs';
 import { getTgFileById } from './utils/index.js';
 
 const app = new Hono()
@@ -90,7 +91,9 @@ app.post('/api/auth/login', async (c) => {
     if (!user) {
       return createResponse(c, { error: '未授权', message: '用户不存在' }, 400);
     }
-    if (user.password !== password) {
+    // 使用 bcrypt 比对密码哈希
+    const passwordMatch = bcrypt.compareSync(password, user.password || '');
+    if (!passwordMatch) {
       return createResponse(c, { error: '未授权', message: '密码错误' }, 400);
     }
     const result = {
@@ -153,11 +156,13 @@ app.post('/api/users', async (c) => {
   if (existingUser) {
     return createResponse(c, { error: '账号已存在', message: '该账号已被注册' }, 409);
   }
+  // 对密码进行哈希再存储
+  const hashedPassword = bcrypt.hashSync(body.password, 10);
   const result = await c.env.DB.prepare(
     'INSERT INTO users (account, password, name, role, extra_data) VALUES (?, ?, ?, ?, ?)'
   ).bind(
     body.account,
-    body.password,
+    hashedPassword,
     body.name,
     body.role || 'normal',
     body.extra_data ? JSON.stringify(body.extra_data) : null
@@ -184,7 +189,7 @@ app.put('/api/users/:id', async (c) => {
   const updates = [];
   const bindings = [];
   if (body.account !== undefined) { updates.push('account = ?'); bindings.push(body.account); }
-  if (body.password !== undefined) { updates.push('password = ?'); bindings.push(body.password); }
+  if (body.password !== undefined) { updates.push('password = ?'); bindings.push(body.password ? bcrypt.hashSync(body.password, 10) : null); }
   if (body.name !== undefined) { updates.push('name = ?'); bindings.push(body.name); }
   if (body.role !== undefined) { updates.push('role = ?'); bindings.push(body.role); }
   if (body.extra_data !== undefined) { updates.push('extra_data = ?'); bindings.push(body.extra_data ? JSON.stringify(body.extra_data) : null); }

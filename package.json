@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"hono": "4.8.2",
+		"bcryptjs": "^2.4.3",
 		"ahooks": "^3.9.0",
 		"antd-mobile": "^5.39.0",
 		"antd-mobile-icons": "^0.3.0",
