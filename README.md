@@ -7,7 +7,7 @@
 - 📝 支持用户注册、登录、权限管理（管理员/普通用户）
 - 📸 图片/文件上传，文件存储于 Cloudflare KV，支持 Telegram 云端备份
 - 🗂️ 记录（posts）增删改查，支持分页
-- 🔒 RESTful API，基于 Basic Auth 验证
+- 🔒 RESTful API，基于 JWT + HttpOnly Cookie 验证
 - ⚡ 前后端分离，前端基于 React + antd-mobile，后端基于 Hono 框架
 - 🌍 跨域支持，适合多端部署
 - 🛠️ 支持 Cloudflare D1 数据库
@@ -15,7 +15,7 @@
 ## 技术栈
 
 - Cloudflare Workers
-- Hono (API 路由)
+- Hono (API 路由，已模块化至 `src/worker/routes/`)
 - React 18 / antd-mobile
 - Cloudflare KV / D1 Database
 - Vite 构建
@@ -81,11 +81,9 @@ CREATE TABLE records (
 );
 ```
 
-```
-INSERT INTO users (account, password, name, role, extra_data) VALUES ('admin', 'admin123', '系统管理员', 'admin', '{"avatar": "https://cdn.jsdelivr.net/gh/Zgrowth/image@master/141380129-(1).70afffymx2.webp", "phone": "13800138000"}');
-```
+> 请在 `wrangler.json` 中补充 `ADMIN_INIT_SECRET`，然后使用登录页底部“初始化管理员账号”按钮创建固定账号 `admin`。
 
-**将上面三段代码分别执行**
+**将上面两段代码分别执行**
 
 ![](https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/image.8z6vssz5v9.webp)
 

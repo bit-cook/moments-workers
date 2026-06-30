@@ -166,6 +166,13 @@ class ApiClient {
     return this.request('/auth/me', { method: 'GET' });
   }
 
+  async initAdmin(account, password, secret) {
+    return this.request('/auth/init-admin', {
+      method: 'POST',
+      body: JSON.stringify({ account, password, secret }),
+    });
+  }
+
   /**
    * 上传文件。
    * @param {File} file - 要上传的文件
@@ -278,6 +285,7 @@ export const authApi = {
     return api.currentUser;
   },
   me: () => api.me(),
+  initAdmin: (account, password, secret) => api.initAdmin(account, password, secret),
 };
 
 // Users API 封装

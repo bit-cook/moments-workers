@@ -6,13 +6,18 @@ import {
   Toast, 
   Card
 } from "antd-mobile";
-import { EyeInvisibleOutline, EyeOutline, UserOutline, LockOutline } from "antd-mobile-icons";
+import { EyeInvisibleOutline, EyeOutline, UserOutline } from "antd-mobile-icons";
+import { authApi } from "../utils/api";
 import { useAuth } from "../utils/authContext";
 import { useNavigate } from "react-router-dom";
 import styles from "./login.module.css";
 
 const Login = () => {
   const [visible, setVisible] = useState(false);
+  const [showInit, setShowInit] = useState(false);
+  const [initPassword, setInitPassword] = useState('');
+  const [initSecret, setInitSecret] = useState('');
+  const [initLoading, setInitLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { login, loading, loginError } = useAuth();
@@ -32,6 +37,50 @@ const Login = () => {
         icon: 'fail',
         content: error.message || '登录失败，请重试',
       });
+    }
+  };
+
+  const handleInitAdmin = async () => {
+    if (!initPassword) {
+      Toast.show({
+        icon: 'fail',
+        content: '请输入管理员密码',
+      });
+      return;
+    }
+
+    if (initPassword.length < 6) {
+      Toast.show({
+        icon: 'fail',
+        content: '管理员密码至少6个字符',
+      });
+      return;
+    }
+
+    if (!initSecret) {
+      Toast.show({
+        icon: 'fail',
+        content: '请输入初始化密钥',
+      });
+      return;
+    }
+
+    setInitLoading(true);
+    try {
+      await authApi.initAdmin('admin', initPassword, initSecret);
+      await login('admin', initPassword);
+      Toast.show({
+        icon: 'success',
+        content: '管理员账号初始化成功，已登录！',
+      });
+      navigate('/');
+    } catch (error) {
+      Toast.show({
+        icon: 'fail',
+        content: error.message || '初始化管理员账号失败，请重试',
+      });
+    } finally {
+      setInitLoading(false);
     }
   };
 
@@ -129,10 +178,75 @@ const Login = () => {
                   立即注册
                 </a>
               </span>
+              <Button
+                fill='outline'
+                className={styles.initButton}
+                onClick={() => setShowInit(true)}
+              >
+                初始化管理员账号
+              </Button>
             </div>
           </div>
         </Card>
       </div>
+
+      {showInit && (
+        <div className={styles.modalOverlay} onClick={() => setShowInit(false)}>
+          <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalTitle}>初始化管理员账号</div>
+            <div className={styles.modalText}>
+              管理员账号固定为 <strong>admin</strong>，请输入管理员登录密码和初始化密钥。
+            </div>
+            <Form
+              layout="vertical"
+              footer={(
+                <div className={styles.modalActions}>
+                  <Button
+                    color='warning'
+                    fill='outline'
+                    onClick={() => setShowInit(false)}
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    color='primary'
+                    loading={initLoading}
+                    disabled={!initPassword || initPassword.length < 6 || !initSecret}
+                    onClick={handleInitAdmin}
+                  >
+                    确认创建
+                  </Button>
+                </div>
+              )}
+              style={{
+                '--prefix-width': '40px'
+              }}
+            >
+              <Form.Item
+                label={<span className={styles.formLabel}>管理员密码</span>}
+              >
+                <Input
+                  placeholder="请输入管理员密码"
+                  type={visible ? 'text' : 'password'}
+                  value={initPassword}
+                  onChange={setInitPassword}
+                  clearable
+                />
+              </Form.Item>
+              <Form.Item
+                label={<span className={styles.formLabel}>初始化密钥</span>}
+              >
+                <Input
+                  placeholder="请输入 vars 中定义的初始化密钥"
+                  value={initSecret}
+                  onChange={setInitSecret}
+                  clearable
+                />
+              </Form.Item>
+            </Form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
