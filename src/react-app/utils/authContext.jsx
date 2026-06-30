@@ -26,15 +26,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // 优先从本地缓存恢复用户信息（方便展示），再调用后端 /auth/me 验证会话
         const authInfo = getAuthInfo();
-        console.log('authInfo🧐', authInfo);
-
-        if (!authInfo || !authInfo.token) {
-          return;
+        if (authInfo && authInfo.user) {
+          setUser(authInfo.user);
         }
 
-        await authApi.saveAuth(authInfo.user, authInfo.token);
-        setUser(authInfo.user);
+        try {
+          const me = await authApi.me();
+          if (me) {
+            // me 返回 user 对象
+            saveAuthInfo(me);
+            authApi.saveAuth(me);
+            setUser(me);
+          }
+        } catch (e) {
+          // 未登录或 token 失效
+          clearAuthCache();
+        }
       } catch (e) {
         console.error('初始化认证失败:', e);
       } finally {
@@ -53,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       const result = await authApi.login(account, password);
 
       // 保存认证信息到本地存储，包含 JWT token，便于刷新后恢复登录态
-      saveAuthInfo(result.user, result.token);
+      saveAuthInfo(result.user);
 
       // 更新状态
       setUser(result.user);

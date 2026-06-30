@@ -69,6 +69,7 @@ class ApiClient {
 
     const config = {
       headers,
+      credentials: 'include',
       ...options,
     };
 
@@ -160,6 +161,11 @@ class ApiClient {
     return this.request(endpoint, { method: 'DELETE' });
   }
 
+  // 获取当前登录用户（通过 cookie token）
+  async me() {
+    return this.request('/auth/me', { method: 'GET' });
+  }
+
   /**
    * 上传文件。
    * @param {File} file - 要上传的文件
@@ -198,12 +204,9 @@ export const authApi = {
    */
   async login(account, password) {
     try {
+      // 登录后后端会设置 HttpOnly cookie，返回的 body 是用户信息
       const result = await api.post('/auth/login', { account, password });
-      const { token, ...userData } = result || {};
-
-      if (!token) {
-        throw new Error('登录接口未返回 token');
-      }
+      const userData = result || {};
 
       let extraData = {};
       try {
@@ -212,14 +215,13 @@ export const authApi = {
         extraData = {};
       }
 
-      api.setToken(token);
       api.currentUser = {
         ...userData,
         ...extraData,
         authenticated: true,
       };
 
-      return { success: true, user: api.currentUser, token };
+      return { success: true, user: api.currentUser };
     } catch (error) {
       api.clearAuth();
       console.error('登录失败:', error);
@@ -238,7 +240,7 @@ export const authApi = {
    * @param {string} token - JWT token
    */
   async saveAuth(user, token) {
-    api.setToken(token);
+    // 使用 cookie 会话时只保存 user 到客户端状态
     api.currentUser = {
       ...user,
       authenticated: true,
@@ -249,8 +251,14 @@ export const authApi = {
    * 登出。
    * @returns {Object} 登出结果 { success, message }
    */
-  logout() {
+  async logout() {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {
+      // ignore
+    }
     api.clearAuth();
+    clearAuthCache();
     return { success: true, message: '登出成功' };
   },
 
@@ -259,7 +267,7 @@ export const authApi = {
    * @returns {boolean} 是否已认证
    */
   isAuthenticated() {
-    return !!api.token && api.currentUser?.authenticated;
+    return !!api.currentUser?.authenticated;
   },
 
   /**
@@ -269,6 +277,7 @@ export const authApi = {
   getCurrentUser() {
     return api.currentUser;
   },
+  me: () => api.me(),
 };
 
 // Users API 封装

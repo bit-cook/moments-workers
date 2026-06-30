@@ -9,7 +9,10 @@ import { getTgFileById } from './utils/index.js';
 const app = new Hono()
 
 // CORS should be called before the route
-app.use('/api/*', cors());
+app.use('/api/*', cors({
+  origin: (origin) => origin,
+  credentials: true,
+}));
 
 app.get(
   '/api/file/*',
@@ -35,16 +38,24 @@ function createResponse(c, data, status = 200) {
 // JWT 认证中间件
 // 所有非公开接口都需要携带 Bearer token，服务端通过 JWT_SECRET 验证身份。
 const authMiddleware = async (c, next) => {
+  // 优先从 Authorization header 获取 token，回退到 cookie 中名为 token 的值
+  let token = null;
   const authHeader = c.req.header('Authorization') || c.req.header('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else {
+    const cookieHeader = c.req.header('cookie') || c.req.header('Cookie') || '';
+    const match = cookieHeader.match(/(?:^|; )token=([^;]+)/);
+    if (match) token = match[1];
+  }
+
+  if (!token) {
     return createResponse(c, { message: '未授权访问' }, 401);
   }
-  const token = authHeader.substring(7);
+
   try {
     const secret = c.env.JWT_SECRET;
-    console.log('[authMiddleware] Verifying token:', token);
     const decoded = await verify(token, secret, 'HS256');
-    console.log('[authMiddleware] Decoded token:', decoded);
     // 直接从 JWT token 中获取用户信息，无需查询数据库
     c.set('user', decoded);
     await next();
@@ -104,11 +115,34 @@ app.post('/api/auth/login', async (c) => {
       extra_data: user.extra_data,
     };
     const token = await generateToken(result, c.env.JWT_SECRET);
-    result.token = token;
+
+    // 设置 HttpOnly cookie（7天）
+    const maxAge = 7 * 24 * 60 * 60;
+    const secureFlag = c.env.NODE_ENV === 'production' ? '; Secure' : '';
+    const cookie = `token=${token}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secureFlag}`;
+    c.header('Set-Cookie', cookie);
+
+    // 返回用户信息（不依赖前端保存 token）
     return createResponse(c, result, 200);
   } catch (error) {
     return createResponse(c, { error: '服务器内部错误', message: error.message }, 500);
   }
+});
+
+// 注销：清除 token cookie
+app.post('/api/auth/logout', async (c) => {
+  const cookie = `token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`;
+  c.header('Set-Cookie', cookie);
+  return createResponse(c, { message: '登出成功' }, 200);
+});
+
+// 获取当前登录用户信息
+app.get('/api/auth/me', async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return createResponse(c, { error: '未授权', message: '未登录' }, 401);
+  }
+  return createResponse(c, user, 200);
 });
 
 app.get('/api/users', async (c) => {

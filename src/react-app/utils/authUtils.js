@@ -3,22 +3,16 @@
 // 本地存储键名
 const AUTH_KEYS = {
   USER: 'auth_user',
-  TOKEN: 'auth_token'
+  // 不再在 localStorage 中存储 token（使用 HttpOnly cookie）
 };
 
 /**
  * 保存认证信息到本地存储。
  * 仅保留 JWT token 作为登录态凭据。
  */
-export const saveAuthInfo = (userInfo, token = null) => {
+export const saveAuthInfo = (userInfo) => {
   try {
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(userInfo || {}));
-
-    if (token) {
-      localStorage.setItem(AUTH_KEYS.TOKEN, token);
-    } else {
-      localStorage.removeItem(AUTH_KEYS.TOKEN);
-    }
   } catch (error) {
     console.error('保存认证信息失败:', error);
   }
@@ -31,16 +25,8 @@ export const saveAuthInfo = (userInfo, token = null) => {
 export const getAuthInfo = () => {
   try {
     const user = localStorage.getItem(AUTH_KEYS.USER);
-    const token = localStorage.getItem(AUTH_KEYS.TOKEN);
-
-    if (!user || !token) {
-      return null;
-    }
-
-    return {
-      user: JSON.parse(user),
-      token
-    };
+    if (!user) return null;
+    return { user: JSON.parse(user) };
   } catch (error) {
     console.error('获取认证信息失败:', error);
     return null;
@@ -52,7 +38,6 @@ export const getAuthInfo = () => {
  */
 export const clearAuthCache = () => {
   localStorage.removeItem(AUTH_KEYS.USER);
-  localStorage.removeItem(AUTH_KEYS.TOKEN);
 };
 
 /**
@@ -68,5 +53,6 @@ export const getCurrentUser = () => {
  */
 export const getToken = () => {
   const authInfo = getAuthInfo();
-  return authInfo ? authInfo.token : null;
+  // Token 存储为 HttpOnly cookie，前端不可访问
+  return null;
 }; 
