@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Toast } from 'antd-mobile';
+import { Dialog, Toast } from 'antd-mobile';
 import { useAuth } from '../utils/authContext';
 import { usersApi } from '../utils/api';
 import styles from './users.module.css';
@@ -124,18 +124,21 @@ const Users = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('确定删除这个用户吗？')) {
-      return;
-    }
-
-    try {
-      await usersApi.deleteUser(id);
-      Toast.show({ content: '删除成功', position: 'center' });
-      await loadUsers(1, false);
-    } catch (error) {
-      console.error('删除用户失败:', error);
-      Toast.show({ content: error.message || '删除失败，请重试', position: 'center' });
-    }
+    Dialog.confirm({
+      content: '确定删除这个用户吗？删除后将无法恢复。',
+      confirmText: '删除',
+      cancelText: '取消',
+      onConfirm: async () => {
+        try {
+          await usersApi.deleteUser(id);
+          Toast.show({ content: '删除成功', position: 'center' });
+          await loadUsers(1, false);
+        } catch (error) {
+          console.error('删除用户失败:', error);
+          Toast.show({ content: error.message || '删除失败，请重试', position: 'center' });
+        }
+      },
+    });
   };
 
   const handleLoadMore = async () => {

@@ -145,10 +145,10 @@ const CommentModal = ({
       onMaskClick={onClose}
       position='bottom'
       bodyStyle={{ 
-        height: keyboardHeight > 0 ? `calc(70vh + ${keyboardHeight}px)` : '70vh',
-        maxHeight: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px)` : '70vh',
-        transition: 'height 0.3s ease-out, max-height 0.3s ease-out'
+        height: '70vh',
+        maxHeight: '70vh',
       }}
+      closeOnSwipe
       className={styles.commentModal}
     >
       <div className={styles.modalHeader}>
@@ -200,10 +200,7 @@ const CommentModal = ({
         {/* 评论输入区域 */}
         <div 
           className={styles.commentInput}
-          style={{
-            transform: keyboardHeight > 0 ? `translateY(-${keyboardHeight}px)` : 'translateY(0)',
-            transition: 'transform 0.3s ease-out'
-          }}
+          style={{}}
         >
           <div className={styles.inputContainer}>
             <Avatar 

@@ -192,13 +192,16 @@
 }
 
 .largeImage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 400px;
 }
 
 .largeImage .imageWrapper {
-  width: 100%;
-  height: 100%;
+  width: 50%;
+  height: 50%;
   position: relative;
 }
 
@@ -481,12 +484,6 @@
   height: 36px;
   border-radius: 50%;
   overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.userAvatarHeader:hover {
-  transform: scale(1.05);
 }
 
 /* Popover菜单样式 */

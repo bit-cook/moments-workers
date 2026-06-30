@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   NavBar, Form, Button, ImageUploader,
-  Toast, SafeArea, TextArea
+  Toast, SafeArea, TextArea, Avatar
 } from "antd-mobile";
 import {
   LeftOutline,
@@ -123,12 +123,10 @@ const Create = () => {
         >
           {/* 用户信息 */}
           <div className={styles.userInfo}>
-            <div className={styles.avatar}>
-              <img
-                src={user?.avatar || 'https://via.placeholder.com/40x40/4A90E2/FFFFFF?text=U'}
-                alt="avatar"
-              />
-            </div>
+            <Avatar
+              src={user?.avatar}
+              className={styles.avatar}
+            />
             <div className={styles.userDetails}>
               <div className={styles.userName}>{user?.name || '用户'}</div>
               <div className={styles.userRole}>{user?.role === 'admin' ? '管理员' : '普通用户'}</div>
