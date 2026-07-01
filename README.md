@@ -23,7 +23,12 @@
 
 ## 项目预览
 
-<table>   <tr>     <td><img src="https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/1000056292.mfksz4o4.png" alt="示例1" width="200"/></td>     <td><img src="https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/1000056296.13m4vouyl1.png" alt="示例2" width="200"/></td>     <td><img src="https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/1000056300.491mumpdjp.png" alt="示例3" width="200"/></td>     <td><img src="https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/1000056303.9rjrau4lvx.png" alt="示例4" width="200"/></td> <td><img src="https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/1000056298.1sfefpihmg.png" alt="示例5" width="200"/></td>  </tr> </table>
+<table>   <tr>     <td><img src="https://img.952737.xyz/file/1782878836606_Screenshot_2026-07-01-12-01-05-776_com.mmbox.xbrowser-edit.png" alt="示例1" width="200"/></td>     <td><img src="https://img.952737.xyz/file/1782878837009_Screenshot_2026-07-01-11-53-08-518_com.mmbox.xbrowser-edit.png" alt="示例2" width="200"/></td>     <td><img src="https://img.952737.xyz/file/1782878836252_Screenshot_2026-07-01-11-54-43-122_com.mmbox.xbrowser-edit.png" alt="示例3" width="200"/></td>     <td><img src="https://img.952737.xyz/file/1782878841607_Screenshot_2026-07-01-11-51-12-657_com.mmbox.xbrowser-edit.png" alt="示例4" width="200"/></td> <td><img src="https://img.952737.xyz/file/1782878835026_Screenshot_2026-07-01-11-54-28-930_com.mmbox.xbrowser-edit.png" alt="示例5" width="200"/></td>  </tr> </table>
+
+### 在线体验
+
+> 🌐 **在线演示**：[https://m.952737.xyz](https://m.952737.xyz)  
+> 🔒 **账号&密码**：ad/admin123
 
 ## 部署步骤
 
@@ -115,10 +120,6 @@ CREATE TABLE records (
 **等待部署完成即可，后续改动git仓库都会触发自动部署**
 ![](https://cdn.jsdelivr.net/gh/Zgrowth/image@master/document/image.7lkcp23fm5.webp)
 
-默认分配的域名需要科学上网才可以访问，[点击查看](https://moment.chengzhnag1.workers.dev)
-
-初始账号：admin
-初始密码：admin123
 
 ## 支持我
 
