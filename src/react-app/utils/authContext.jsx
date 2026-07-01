@@ -35,10 +35,17 @@ export const AuthProvider = ({ children }) => {
         try {
           const me = await authApi.me();
           if (me) {
+            let extraData = {};
+            try {
+              extraData = JSON.parse(me?.extra_data);
+            } catch (e) {
+              extraData = {};
+            }
+            const userWithExtraData = { ...me, ...extraData };
             // me 返回 user 对象
-            saveAuthInfo(me);
-            authApi.saveAuth(me);
-            setUser(me);
+            saveAuthInfo(userWithExtraData);
+            authApi.saveAuth(userWithExtraData);
+            setUser(userWithExtraData);
           }
         } catch (e) {
           // 未登录或 token 失效
